@@ -87,6 +87,19 @@ Metrics (`src/eval/metrics.py`, unit-testable without a GPU):
   responses that don't commit to a verdict. Verdict parsing is negation-aware — naive substring
   matching on "tamper" misfires on phrases like *"no signs of tampering"*; see `parse_verdict`.
 
+## Live demo (`src/serve/app.py`)
+
+A small Gradio app that reuses the exact model-loading/generation code from the eval harness, so
+the demo and the scored numbers can't silently diverge:
+
+```
+pip install gradio
+python src/serve/app.py --adapter outputs/qwen2vl-2b-docguard-lora
+```
+
+Upload a document image, pick OCR or forgery-detection (or write a custom instruction), see the
+model's output. Omit `--adapter` to demo the zero-shot base model for comparison.
+
 ## Results
 
 _Fill in after running `evaluate.py` on both the zero-shot baseline and the fine-tuned adapter:_
@@ -114,6 +127,7 @@ _Fill in after running `evaluate.py` on both the zero-shot baseline and the fine
 src/data_gen/   synthetic tampering, adversarial perturbations, dataset builder
 src/train/      dataset loading helpers shared by the Colab notebook and eval
 src/eval/       metrics + evaluation harness
+src/serve/      Gradio live demo (reuses eval's model-loading/generation code)
 notebooks/      Colab fine-tuning notebook
 data/processed/ generated JSONL + images (not committed; regenerate with build_dataset.py)
 results/        eval_*.json outputs

@@ -14,3 +14,6 @@ tqdm
 # bitsandbytes
 # trl==0.12.1
 # unsloth
+
+# --- demo app (src/serve/app.py) ---
+# gradio
