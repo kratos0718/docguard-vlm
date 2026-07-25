@@ -28,6 +28,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from eval.metrics import forgery_accuracy, ocr_accuracy
 from train.dataset_utils import load_jsonl, resolve_image
 
+try:
+    from transformers.utils import logging as hf_logging
+
+    hf_logging.set_verbosity_error()
+except ImportError:
+    pass
+
 
 def build_model(base_model, adapter_path, device, load_in_4bit=True):
     import torch
@@ -67,6 +74,11 @@ def build_model(base_model, adapter_path, device, load_in_4bit=True):
         from peft import PeftModel
 
         model = PeftModel.from_pretrained(model, adapter_path)
+
+    # Qwen2-VL's default generation_config sets max_length=32768 alongside our explicit
+    # max_new_tokens, which triggers a redundant-config warning on every single generate()
+    # call. Clear it so the two don't conflict (max_new_tokens alone is unambiguous).
+    model.generation_config.max_length = None
 
     model.eval()
     return model, processor
