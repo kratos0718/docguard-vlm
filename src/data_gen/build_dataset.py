@@ -55,8 +55,18 @@ def extract_fields(gt_parse: dict) -> dict:
     }
 
 
+# Distinct per-split seed offsets. build_split reseeds at the top of every call, and
+# test_clean/test_adversarial both draw 60-of-100 from equally-sized CORD splits -- with a
+# shared seed, `random.shuffle(list(range(100)))` produces the *same* permutation both times,
+# making label/tamper-type/instruction-phrasing identical position-by-position between the two
+# splits (only the underlying photo differs). That defeats the point of a separate adversarial
+# eval set. Offsetting the seed per split breaks that correlation.
+SPLIT_SEED_OFFSETS = {"train": 0, "test_clean": 1000, "test_adversarial": 2000}
+
+
 def build_split(hf_split_name, out_tag, n_images, images_dir, base_dir, donor_pool_size=40, adversarial=False, seed=RNG_SEED):
-    random.seed(seed)
+    split_offset = SPLIT_SEED_OFFSETS.get(out_tag, 0)
+    random.seed(seed + split_offset)
     ds = load_dataset("naver-clova-ix/cord-v2", split=hf_split_name)
     n_images = min(n_images, len(ds))
     indices = list(range(len(ds)))
@@ -83,7 +93,7 @@ def build_split(hf_split_name, out_tag, n_images, images_dir, base_dir, donor_po
         ocr_img = img
         ocr_suffix = ""
         if adversarial:
-            ocr_img, pert_name = apply_random_perturbation(img, seed=idx)
+            ocr_img, pert_name = apply_random_perturbation(img, seed=idx + split_offset)
             ocr_suffix = f"_adv-{pert_name}"
         ocr_path = os.path.join(images_dir, f"{image_id}_ocr{ocr_suffix}.png")
         ocr_img.save(ocr_path)
@@ -97,7 +107,7 @@ def build_split(hf_split_name, out_tag, n_images, images_dir, base_dir, donor_po
         if is_tampered:
             donor_pool = donor_images if donor_images else None
             result = apply_random_tamper(
-                img, donor_pool=donor_pool, content_boxes=content_boxes, seed=idx + 10_000
+                img, donor_pool=donor_pool, content_boxes=content_boxes, seed=idx + split_offset + 10_000
             )
             forg_img, bbox, ttype = result.image, result.bbox, result.tamper_type
         else:
@@ -105,7 +115,7 @@ def build_split(hf_split_name, out_tag, n_images, images_dir, base_dir, donor_po
 
         forg_suffix = ""
         if adversarial:
-            forg_img, pert_names = apply_stacked_perturbations(forg_img, n=2, seed=idx + 20_000)
+            forg_img, pert_names = apply_stacked_perturbations(forg_img, n=2, seed=idx + split_offset + 20_000)
             forg_suffix = "_adv-" + "-".join(pert_names)
         forg_path = os.path.join(images_dir, f"{image_id}_forgery{forg_suffix}.png")
         forg_img.save(forg_path)
