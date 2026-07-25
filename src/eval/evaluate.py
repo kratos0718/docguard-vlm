@@ -29,12 +29,31 @@ from eval.metrics import forgery_accuracy, ocr_accuracy
 from train.dataset_utils import load_jsonl, resolve_image
 
 
-def build_model(base_model, adapter_path, device):
+def build_model(base_model, adapter_path, device, load_in_4bit=True):
     import torch
     from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
 
     dtype = torch.float16 if device != "cpu" else torch.float32
-    model = Qwen2VLForConditionalGeneration.from_pretrained(base_model, torch_dtype=dtype)
+
+    # 4-bit by default: matches how the adapter was trained (QLoRA) and keeps both host RAM
+    # and GPU memory low enough for free-tier Colab, which otherwise can OOM loading the full
+    # fp16 checkpoint -- especially with training-session memory still resident.
+    if load_in_4bit and device == "cuda":
+        from transformers import BitsAndBytesConfig
+
+        quant_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+        )
+        model = Qwen2VLForConditionalGeneration.from_pretrained(
+            base_model, quantization_config=quant_config, device_map={"": 0}
+        )
+    else:
+        model = Qwen2VLForConditionalGeneration.from_pretrained(base_model, torch_dtype=dtype)
+        model = model.to(device)
+
     processor = AutoProcessor.from_pretrained(base_model)
 
     if adapter_path:
@@ -42,7 +61,6 @@ def build_model(base_model, adapter_path, device):
 
         model = PeftModel.from_pretrained(model, adapter_path)
 
-    model = model.to(device)
     model.eval()
     return model, processor
 
@@ -101,14 +119,15 @@ def main():
     ap.add_argument("--limit", type=int, default=None, help="cap examples per split, for a quick smoke test")
     ap.add_argument("--out", default="results/eval_results.json")
     ap.add_argument("--save-predictions", action="store_true")
+    ap.add_argument("--no-4bit", action="store_true", help="load full fp16 instead of 4-bit (uses much more memory)")
     args = ap.parse_args()
 
     import torch
 
     device = args.device or ("cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu"))
-    print(f"device={device} base_model={args.base_model} adapter={args.adapter}")
+    print(f"device={device} base_model={args.base_model} adapter={args.adapter} load_in_4bit={not args.no_4bit}")
 
-    model, processor = build_model(args.base_model, args.adapter, device)
+    model, processor = build_model(args.base_model, args.adapter, device, load_in_4bit=not args.no_4bit)
 
     splits = {
         "clean": load_jsonl(os.path.join(args.data_root, "test_clean.jsonl")),
