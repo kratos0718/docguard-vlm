@@ -54,7 +54,14 @@ def build_model(base_model, adapter_path, device, load_in_4bit=True):
         model = Qwen2VLForConditionalGeneration.from_pretrained(base_model, torch_dtype=dtype)
         model = model.to(device)
 
-    processor = AutoProcessor.from_pretrained(base_model)
+    # Cap image resolution: several source photos are ~9MP (e.g. 2304x4096), and Qwen2-VL's
+    # default max_pixels (~12.8MP) lets those through uncapped, producing thousands of visual
+    # tokens and a single attention call that can request 6+ GiB on its own -- independent of
+    # anything else resident on the GPU. 1024*28*28 (~0.8MP) keeps receipts legible while
+    # keeping worst-case attention memory bounded on a T4.
+    processor = AutoProcessor.from_pretrained(
+        base_model, min_pixels=256 * 28 * 28, max_pixels=1024 * 28 * 28
+    )
 
     if adapter_path:
         from peft import PeftModel
