@@ -3,6 +3,5 @@ __pycache__/
 *.pyc
 data/
 outputs/
-results/
 .ipynb_checkpoints/
 .DS_Store

@@ -1,0 +1,51 @@
+{
+  "base_model": "unsloth/Qwen2-VL-2B-Instruct",
+  "adapter": "/content/drive/MyDrive/docguard-vlm-outputs/qwen2vl-2b-docguard-lora",
+  "device": "cuda",
+  "clean": {
+    "ocr": {
+      "n": 60,
+      "json_valid_rate": 0.9166666666666666,
+      "total_match_rate": 0.9
+    },
+    "forgery": {
+      "n": 60,
+      "accuracy": 0.55,
+      "precision_tampered": 0.625,
+      "recall_tampered": 0.5714285714285714,
+      "f1_tampered": 0.5970149253731343,
+      "unknown_rate": 0.0,
+      "confusion": {
+        "tp": 20,
+        "fp": 12,
+        "fn": 15,
+        "tn": 13
+      }
+    },
+    "n_examples": 120,
+    "wall_time_sec": 1100.2469861507414
+  },
+  "adversarial": {
+    "ocr": {
+      "n": 60,
+      "json_valid_rate": 0.8833333333333333,
+      "total_match_rate": 0.7833333333333333
+    },
+    "forgery": {
+      "n": 60,
+      "accuracy": 0.55,
+      "precision_tampered": 0.625,
+      "recall_tampered": 0.5714285714285714,
+      "f1_tampered": 0.5970149253731343,
+      "unknown_rate": 0.0,
+      "confusion": {
+        "tp": 20,
+        "fp": 12,
+        "fn": 15,
+        "tn": 13
+      }
+    },
+    "n_examples": 120,
+    "wall_time_sec": 1167.1232335567474
+  }
+}

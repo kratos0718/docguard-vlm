@@ -1,0 +1,51 @@
+{
+  "base_model": "unsloth/Qwen2-VL-2B-Instruct",
+  "adapter": null,
+  "device": "cuda",
+  "clean": {
+    "ocr": {
+      "n": 60,
+      "json_valid_rate": 0.25,
+      "total_match_rate": 0.3333333333333333
+    },
+    "forgery": {
+      "n": 60,
+      "accuracy": 0.4915254237288136,
+      "precision_tampered": 1.0,
+      "recall_tampered": 0.11764705882352941,
+      "f1_tampered": 0.21052631578947367,
+      "unknown_rate": 0.016666666666666666,
+      "confusion": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 30,
+        "tn": 25
+      }
+    },
+    "n_examples": 120,
+    "wall_time_sec": 979.1489267349243
+  },
+  "adversarial": {
+    "ocr": {
+      "n": 60,
+      "json_valid_rate": 0.13333333333333333,
+      "total_match_rate": 0.18333333333333332
+    },
+    "forgery": {
+      "n": 60,
+      "accuracy": 0.43859649122807015,
+      "precision_tampered": 0.75,
+      "recall_tampered": 0.08823529411764706,
+      "f1_tampered": 0.15789473684210525,
+      "unknown_rate": 0.05,
+      "confusion": {
+        "tp": 3,
+        "fp": 1,
+        "fn": 31,
+        "tn": 22
+      }
+    },
+    "n_examples": 120,
+    "wall_time_sec": 1028.135535478592
+  }
+}

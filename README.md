@@ -102,14 +102,41 @@ model's output. Omit `--adapter` to demo the zero-shot base model for comparison
 
 ## Results
 
-_Fill in after running `evaluate.py` on both the zero-shot baseline and the fine-tuned adapter:_
+Qwen2-VL-2B-Instruct, zero-shot vs. LoRA fine-tuned (rank 16, 2 epochs, 350 train examples),
+scored on 120 held-out examples per split (60 OCR + 60 forgery):
 
-| model | split | OCR JSON-valid | OCR total-match | Forgery accuracy | Forgery F1 (tampered) |
-|---|---|---|---|---|---|
-| Qwen2-VL-2B zero-shot | clean | | | | |
-| Qwen2-VL-2B zero-shot | adversarial | | | | |
-| Qwen2-VL-2B + LoRA (ours) | clean | | | | |
-| Qwen2-VL-2B + LoRA (ours) | adversarial | | | | |
+| model | split | OCR JSON-valid | OCR total-match | Forgery accuracy | Forgery F1 (tampered) | Forgery recall (tampered) |
+|---|---|---|---|---|---|---|
+| Qwen2-VL-2B zero-shot | clean | 25.0% | 33.3% | 49.2% | 0.21 | 11.8% |
+| Qwen2-VL-2B zero-shot | adversarial | 13.3% | 18.3% | 43.9% | 0.16 | 8.8% |
+| Qwen2-VL-2B + LoRA (ours) | clean | 91.7% | 90.0% | 55.0% | 0.60 | 57.1% |
+| Qwen2-VL-2B + LoRA (ours) | adversarial | 88.3% | 78.3% | 55.0% | 0.60 | 57.1% |
+
+**OCR field extraction** is the clean win: the zero-shot model rarely even emits valid JSON in this
+schema (25%/13%), while the fine-tuned adapter hits 91.7%/88.3% JSON-validity and 90.0%/78.3%
+total-amount match — a ~3-4x improvement that holds up (with the expected degradation) under
+adversarial perturbation.
+
+**Forgery detection** improves substantially too — F1 roughly triples (0.21→0.60, 0.16→0.60) and
+recall on the "tampered" class goes from essentially not-detecting (11.8%/8.8%) to actually
+flagging most tampered documents (57.1%/57.1%). The zero-shot model's near-perfect precision with
+terrible recall is a classic "always guess authentic" failure mode, not real forgery detection.
+
+**A caveat worth stating plainly, not glossing over:** the fine-tuned model's forgery confusion
+matrix is *bit-for-bit identical* between the clean and adversarial splits (tp=20, fp=12, fn=15,
+tn=13 in both) — despite the two splits using genuinely different, adversarially-perturbed images.
+The zero-shot baseline's confusion matrix, by contrast, *does* shift between splits (tp 4→3, tn
+25→22), as you'd expect from a model actually responding to pixel differences. This is independent
+evidence for a real bug I found and fixed in the dataset builder: `build_split()` reseeded Python's
+RNG to the same value at the top of every split, and since `test_clean`/`test_adversarial` draw
+60-of-100 from equally-sized CORD splits, that produced the *identical* shuffle permutation both
+times — making tampered/authentic labels, tamper type, and instruction phrasing identical
+position-by-position between the two splits (see `SPLIT_SEED_OFFSETS` in `build_dataset.py` for the
+fix). The results above were measured against the *pre-fix* dataset, so the forgery-task numbers
+likely overstate robustness: the fine-tuned model may be partly keying off the label-correlated
+template patterns baked into the (pre-fix) data rather than purely visual evidence. The seeding fix
+is in the codebase now; a full retrain on the corrected dataset would be needed to get a clean
+answer on how much of the forgery-detection gain is genuine visual robustness vs. this artifact.
 
 ## Limitations
 
@@ -120,6 +147,10 @@ _Fill in after running `evaluate.py` on both the zero-shot baseline and the fine
   training budget, not to be state-of-the-art.
 - `patch_overlay`'s fake replacement text is drawn from a small fixed vocabulary, so the model may
   partly learn to recognize that specific pattern rather than field-tampering in general.
+- **Clean/adversarial forgery-detection comparison is confounded by a since-fixed seeding bug** —
+  see the Results section above. The OCR numbers aren't affected (they don't depend on the
+  tampered/authentic label pattern), but the forgery robustness claim should be treated as
+  provisional until re-measured on a retrain against the corrected dataset.
 
 ## Repo layout
 
