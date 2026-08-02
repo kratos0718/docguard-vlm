@@ -138,6 +138,11 @@ template patterns baked into the (pre-fix) data rather than purely visual eviden
 is in the codebase now; a full retrain on the corrected dataset would be needed to get a clean
 answer on how much of the forgery-detection gain is genuine visual robustness vs. this artifact.
 
+> 📝 **Write-up:** [The bug that was quietly inflating my own results](WRITEUP.md) — a
+> post-mortem on how a dataset-seeding bug produced a bit-for-bit identical confusion matrix
+> across two different test splits, how the zero-shot baseline made it diagnosable, and why the
+> provisional number is published rather than quietly retrained away.
+
 ## Limitations
 
 - Tampering is synthetic, not real forged documents — it teaches the *classes* of manipulation
