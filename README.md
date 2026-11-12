@@ -23,6 +23,8 @@ the robustness gap is visible rather than hidden inside one aggregate accuracy n
 receipt JSON-validity **25% → 91.7%** on clean scans and **13% → 88.3%** on adversarial ones, and
 forgery F1 **0.21 → 0.60**. Full table and caveats under [Results](#results).
 
+Case study: [abhinavbuilds.online/projects/docguard-vlm](https://www.abhinavbuilds.online/projects/docguard-vlm/)
+
 ## Why this dataset, not a real ID/document forgery dataset
 
 Real forged government ID scans aren't available to train on for obvious legal/ethical reasons.
