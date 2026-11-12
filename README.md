@@ -19,6 +19,10 @@ because a model that only works on centered, clean scans doesn't generalize to r
 uploads. The eval harness reports zero-shot baseline vs. fine-tuned, and clean vs. adversarial, so
 the robustness gap is visible rather than hidden inside one aggregate accuracy number.
 
+**Results at a glance** (zero-shot vs. LoRA fine-tuned, 120 held-out examples per split):
+receipt JSON-validity **25% → 91.7%** on clean scans and **13% → 88.3%** on adversarial ones, and
+forgery F1 **0.21 → 0.60**. Full table and caveats under [Results](#results).
+
 ## Why this dataset, not a real ID/document forgery dataset
 
 Real forged government ID scans aren't available to train on for obvious legal/ethical reasons.
@@ -179,3 +183,8 @@ PYTHONPATH=src python src/data_gen/build_dataset.py --out-dir data/processed \
 # then run notebooks/train_colab.ipynb on Colab (T4 GPU), and
 # src/eval/evaluate.py to score baseline vs. fine-tuned.
 ```
+
+## Author
+
+Built by **Abhinav Tarigoppula**, AI engineer, open to AI engineer roles and internships.
+[abhinavbuilds.online](https://www.abhinavbuilds.online) · [LinkedIn](https://www.linkedin.com/in/abhinav0702/) · [GitHub](https://github.com/kratos0718) · abhinaaavvv07187@gmail.com
