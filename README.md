@@ -148,6 +148,8 @@ answer on how much of the forgery-detection gain is genuine visual robustness vs
 > post-mortem on how a dataset-seeding bug produced a bit-for-bit identical confusion matrix
 > across two different test splits, how the zero-shot baseline made it diagnosable, and why the
 > provisional number is published rather than quietly retrained away.
+>
+> 📄 **Technical report:** [Identical Seeds, Coupled Splits](https://doi.org/10.5281/zenodo.24372913) (Zenodo, DOI 10.5281/zenodo.24372913).
 
 ## Limitations
 
